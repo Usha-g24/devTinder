@@ -62,11 +62,33 @@ app.get("/user",async(req,res)=>{
  });
 // update from API
 app.patch("/user",async(req,res)=>{
-    const userId = req.body.userId;
+    const userId = req.params?.userId;
     const update = req.body;
-    console.log("update : "+update);
     try{
+        const Updateallowed = [
+            "firstName",
+            "lastName",
+            "gender"
+
+        ];
+        const isUpdate = Object.keys(update).every((k)=>
+            Updateallowed.includes(k));
+        if(!isUpdate){
+            throw new Error("invalid update");
+        }
+        //   skills
+        // if(update?.skills.length > 10){
+        //     throw new Error("skills cannot  be more than 10");
+        // }
+        if(update?.skills?.email){
+            throw new Error("email cannot be updated");
+
+        }
+
+
         const user = await User.findByIdAndUpdate(userId,update);
+        returnDocument:"after";
+        runvalidators:true;
         res.send('user update successfully');
     }
     catch(err){
