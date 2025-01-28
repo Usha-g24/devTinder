@@ -1,108 +1,121 @@
 const express = require("express");
 const connectDB = require("./config/database");
-const app =express();
-const User = require("./models/user");
- 
+const app = express();
+const cookieParser = require("cookie-parser");
+
+
 app.use(express.json());
-// new  user to signup
-app.post("/signup",async(req,res)=>{
-    const user = new User(req.body);
-    try{
-        await user.save();
-        res.send("user Added successfully");
-    }
-    catch (err){
-        res.status(500).send("error"+err.message);
-    }
-    
-});
-
-// get all user from API
-app.get("/user",async(req,res)=>{
-    
-    const userEmail = req.body.email;
-   
-    try{
-        console.log("userEmail : "+userEmail);
-        const user = await  User.findOne({email:userEmail});
-        if(!user){
-            res.status(404).send("user found"); 
-        }
-        else{
-            res.send(user);
-        }
-    }
-    catch(err){
-        res.status(500).send("something went wrong");
-    }
-
-});
-
- app.get("/feed",async(req,res)=>{
-    const userEmail = req.body.email;
-    try{
-    const users = await User.find({});
-    res.send(users);
-    }
-    catch(err){
-        res.status(500).send("error"+err.message);
-    }
-
- });
-// delete from API
- app.delete("/user",async(req,res)=>{
-    const  userId = req.body.userId; 
-    try{
-        const user = await User.findByIdAndDelete(userId);
-        res.send("user delete successfully");
-    }
-    catch(err){
-        res.status(500).send("error"+err.message);
-    }
- });
-// update from API
-app.patch("/user",async(req,res)=>{
-    const userId = req.params?.userId;
-    const update = req.body;
-    try{
-        const Updateallowed = [
-            "firstName",
-            "lastName",
-            "gender"
-
-        ];
-        const isUpdate = Object.keys(update).every((k)=>
-            Updateallowed.includes(k));
-        if(!isUpdate){
-            throw new Error("invalid update");
-        }
-        //   skills
-        // if(update?.skills.length > 10){
-        //     throw new Error("skills cannot  be more than 10");
-        // }
-        if(update?.skills?.email){
-            throw new Error("email cannot be updated");
-
-        }
+app.use(cookieParser());
 
 
-        const user = await User.findByIdAndUpdate(userId,update);
-        returnDocument:"after";
-        runvalidators:true;
-        res.send('user update successfully');
-    }
-    catch(err){
-        res.status(500).send("error"+err.message);
-    }
-});
-// database connection
+const authRouter = require("./routes/auth");
+const profileRouter = require("./routes/profile");
+const requestRouter = require("./routes/request");
+
+
+app.use("/",authRouter);
+app.use("/",profileRouter);
+app.use("/",requestRouter);
+
+
+// app.get("/user", async (req, res) => {
+//     try {
+//         const { email } = req.body;
+
+//         if (!email) {
+//             return res.status(400).send("Email is required.");
+//         }
+
+//         const user = await User.findOne({ email: email });
+//         if (!user) {
+//             return res.status(404).send("User not found.");
+//         }
+
+//         res.send(user);
+//     } catch (err) {
+//         res.status(500).send("Error: " + err.message);
+//     }
+// });
+
+// // Get all users
+// app.get("/feed", async (req, res) => {
+//     try {
+//         const users = await User.find({});
+//         if (users.length === 0) {
+//             return res.status(404).send("No users found.");
+//         }
+
+//         res.send(users);
+//     } catch (err) {
+//         res.status(500).send("Error: " + err.message);
+//     }
+// });
+
+// // Delete user
+// app.delete("/user", async (req, res) => {
+//     try {
+//         const { userId } = req.body;
+
+//         if (!userId) {
+//             return res.status(400).send("User ID is required.");
+//         }
+
+//         const user = await User.findByIdAndDelete(userId);
+//         if (!user) {
+//             return res.status(404).send("User not found.");
+//         }
+
+//         res.send("User deleted successfully");
+//     } catch (err) {
+//         res.status(500).send("Error: " + err.message);
+//     }
+// });
+
+// // Update user
+// app.patch("/user", async (req, res) => {
+//     try {
+//         const { userId } = req.body;
+//         const update = req.body;
+
+//         if (!userId) {
+//             return res.status(400).send("User ID is required.");
+//         }
+
+//         const updateAllowed = ["email","password"];
+//         const isValidUpdate = Object.keys(update).every((key) =>
+//             updateAllowed.includes(key)
+//         );
+
+//         if (!isValidUpdate) {
+//             return res.status(400).send("Invalid update fields.");
+//         }
+
+//         const user = await User.findByIdAndUpdate(
+//             userId,
+//             update,
+//             { new: true, runValidators: true }
+//         );
+
+//         if (!user) {
+//             return res.status(404).send("User not found.");
+//         }
+
+//         res.send("User updated successfully");
+//     } catch (err) {
+//         res.status(500).send("Error: " + err.message);
+//     }
+// });
+
+
+
+// Database connection
 connectDB()
-    .then(()=>{
-        console.log("database is connected");
-        app.listen(7777,(req,res)=>{
-            console.log("Port runing in : "+7777);
+    .then(() => {
+        console.log("Database is connected");
+        app.listen(7777, () => {
+            console.log("Port running on: 7777");
         });
     })
-    .catch((err)=>{
-        console.error("error : ");
+    .catch((err) => {
+        console.error("Error: ", err);
     });
